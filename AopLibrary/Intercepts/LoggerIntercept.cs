@@ -15,9 +15,9 @@ public class LoggerIntercept(ILogger<LoggerIntercept> logger) : IInterceptor
 
     public void Intercept(IInvocation invocation)
     {
-        logger.LogInformation($"LoggerIntercept Executing {invocation.MethodInvocationTarget}");
+        logger.LogDebug($"LoggerIntercept Executing {invocation.MethodInvocationTarget}");
         invocation.Proceed();
-        logger.LogInformation($"LoggerIntercept Executed {invocation.MethodInvocationTarget}");
+        logger.LogDebug($"LoggerIntercept Executed {invocation.MethodInvocationTarget}");
     }
 }
 

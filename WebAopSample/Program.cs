@@ -1,3 +1,4 @@
+using AopLibrary.Common;
 using AopLibrary.Extension;
 using AopLibrary.Filter;
 using AopLibrary.Intercepts;
@@ -6,19 +7,28 @@ using Castle.DynamicProxy;
 using Dapper;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using NLog.Extensions.Logging;
 using Npgsql;
 using System.Data;
 using System.Data.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+// NLogã‚’ä½¿ç”¨ã™ã‚‹
+NLogConfig.Initialize();
+builder.Services.AddLogging(loggingBuilder =>
+{
+    loggingBuilder.AddNLog();
+});
+
 // Add services to the container.
-// Controller‚ÉFilter‚ğg—p‚·‚é(Controller‚ÌAOP)
+// Controllerã«Filterã‚’ä½¿ç”¨ã™ã‚‹(Controllerã®AOP)
 builder.Services.AddControllers(options =>
 {
-    // ŠJnI—¹ƒƒO‚ÌFilter
+    // é–‹å§‹çµ‚äº†ãƒ­ã‚°ã®Filter
     options.Filters.Add(typeof(LoggerActionFilter));
-    // ˆÙíˆ—‚ÌFilter
+    // ç•°å¸¸å‡¦ç†ã®Filter
     options.Filters.Add(typeof(ExceptionHandlingFilter));
 }
 
@@ -27,19 +37,21 @@ builder.Services.AddControllers(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// DB‚Ì©“®ƒ}ƒbƒsƒ“ƒOİ’è
-DefaultTypeMap.MatchNamesWithUnderscores= true;
+// DBã®è‡ªå‹•ãƒãƒƒãƒ”ãƒ³ã‚°è¨­å®š
+DefaultTypeMap.MatchNamesWithUnderscores = true;
 
-// DbConnection‚Ì“o˜^
+// DbConnectionã®ç™»éŒ²
 builder.Services.Replace(ServiceDescriptor.Transient<IControllerActivator, ServiceBasedControllerActivator>());
 
-// HTTPS‚ÅƒŒƒXƒ|ƒ“ƒXˆ³k‚ğİ’è‚·‚é
+// HTTPSã§ãƒ¬ã‚¹ãƒãƒ³ã‚¹åœ§ç¸®ã‚’è¨­å®šã™ã‚‹
 builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
 
-// DI‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚Ì“o˜^‚ÆAOP‚Ìİ’è
-builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder => {
-    // DbConnection‚Ì“o˜^
-    containerBuilder.Register<IDbConnection>((ctx) => {
+// DIã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã®ç™»éŒ²ã¨AOPã®è¨­å®š
+builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
+{
+    // DbConnectionã®ç™»éŒ²
+    containerBuilder.Register<IDbConnection>((ctx) =>
+    {
         var target = new NpgsqlConnection(Environment.GetEnvironmentVariable("Connection_PGSQL"));
         // var target = new NpgsqlConnection("Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=postgres;");
         var proxyGenerator = ctx.Resolve<IProxyGenerator>();
@@ -47,12 +59,12 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder => {
         return proxyGenerator.CreateClassProxyWithTarget<DbConnection>(target, proxy);
     });
 
-    // XXX‚Ì“o˜^
+    // XXXã®ç™»éŒ²
     // containerBuilder.RegisterType<ProxyGenerator>.As<IProxyGenerator>().EnableInterfaceInterceptors();
 });
 
-// Controller/Service/Repository‚ÌDI©“®“o˜^
-// ‹¤’ÊAOP‚ÌInterceptor‚Ìİ’è
+// Controller/Service/Repositoryã®DIè‡ªå‹•ç™»éŒ²
+// å…±é€šAOPã®Interceptorã®è¨­å®š
 builder.Host.RegisterAllTypeAsSingle(typeof(Program));
 
 var app = builder.Build();

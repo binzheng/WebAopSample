@@ -33,7 +33,7 @@ public class SqlLoggerIntercept(ILogger<SqlLoggerIntercept> logger) : IIntercept
                     }
 
                 }
-                logger.LogInformation(builder.ToString());
+                logger.LogDebug(builder.ToString());
             }
         }
         catch (Exception e)

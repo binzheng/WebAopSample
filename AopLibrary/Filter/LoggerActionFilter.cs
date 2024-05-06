@@ -13,8 +13,8 @@ public class LoggerActionFilter(ILogger<LoggerActionFilter> logger) : IAsyncActi
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        logger.LogInformation($"LogerActionFilter Extending {context.ActionDescriptor.DisplayName}");
+        logger.LogDebug($"LogerActionFilter Extending {context.ActionDescriptor.DisplayName}");
         await next();
-        logger.LogInformation($"LogerActionFilter Extended {context.ActionDescriptor.DisplayName}");
+        logger.LogDebug($"LogerActionFilter Extended {context.ActionDescriptor.DisplayName}");
     }
 }
